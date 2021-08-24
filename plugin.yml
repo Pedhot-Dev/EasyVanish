@@ -1,0 +1,26 @@
+name: EasyVanish
+api: 3.0.0
+version: 1.0
+main: pedhot\easyvanish\EasyVanish
+
+permissions:
+  easyvanish:
+    default: op
+    description: "Allow to use all vanish features"
+    children:
+      easyvanish.cmd:
+        default: op
+        description: "Allow to use all vanish command"
+        children:
+          easyvanish.cmd.vanish:
+            default: op
+            description: "Allow to use command /vanish"
+          easyvanish.cmd.vanish.help:
+            default: op
+            description: "Allow to use command /vanish help"
+          easyvanish.cmd.vanish.other:
+            default: op
+            description: "Allow to use command /vanish <player: target>"
+          easyvanish.cmd.vanish.list:
+            default: op
+            description: "Allow to use command /vanish list"
