@@ -1,0 +1,12 @@
+---
+branches:
+  - master
+projects:
+  EasyVanish:
+    path: ""
+    lint:
+      phpstan: false
+    libs:
+      - src: JackMD/ConfigUpdater/ConfigUpdater
+        version: ^1.0.0
+...
