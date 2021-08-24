@@ -33,6 +33,7 @@
 namespace pedhot\easyvanish\commands;
 
 use pedhot\easyvanish\EasyVanish;
+use pedhot\easyvanish\Utils;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
@@ -79,14 +80,14 @@ class VanishCommand extends Command {
                             $player->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled-other1", ["{PLAYER}"=>$sender->getName()])));
                             $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled-other2", ["{PLAYER}"=>$player->getDisplayName()])));
                             if (EasyVanish::getInstance()->getSetting("vanished-message")) {
-                                Server::getInstance()->broadcastMessage(EasyVanish::getInstance()->getSetting("quit-message"));
+                                Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("quit-message"), ["{PLAYER}"=> $player->getDisplayName()])));
                             }
                         }else {
                             EasyVanish::getInstance()->destroyInvisible($player);
                             $player->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-disabled-other1", ["{PLAYER}"=>$sender->getName()])));
                             $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-disabled-other2", ["{PLAYER}"=>$player->getDisplayName()])));
                             if (EasyVanish::getInstance()->getSetting("vanished-message")) {
-                                Server::getInstance()->broadcastMessage(EasyVanish::getInstance()->getSetting("join-message"));
+                                Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("join-message"), ["{PLAYER}"=> $player->getDisplayName()])));
                             }
                         }
                     }else{
@@ -102,13 +103,13 @@ class VanishCommand extends Command {
                     EasyVanish::getInstance()->startInvisible($sender);
                     $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled")));
                     if (EasyVanish::getInstance()->getSetting("vanished-message")) {
-                        Server::getInstance()->broadcastMessage(EasyVanish::getInstance()->getSetting("quit-message"));
+                        Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("quit-message"), ["{PLAYER}"=> $sender->getDisplayName()])));
                     }
                 }else {
                     EasyVanish::getInstance()->destroyInvisible($sender);
                     $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-disabled")));
                     if (EasyVanish::getInstance()->getSetting("vanished-message")) {
-                        Server::getInstance()->broadcastMessage(EasyVanish::getInstance()->getSetting("join-message"));
+                        Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("join-message"), ["{PLAYER}"=> $sender->getDisplayName()])));
                     }
                 }
             }else {
@@ -154,14 +155,14 @@ class VanishCommand extends Command {
                         $player->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled-other1", ["{PLAYER}"=>$sender->getName()])));
                         $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled-other2", ["{PLAYER}"=>$player->getDisplayName()])));
                         if (EasyVanish::getInstance()->getSetting("vanished-message")) {
-                            Server::getInstance()->broadcastMessage(EasyVanish::getInstance()->getSetting("quit-message"));
+                            Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("quit-message"), ["{PLAYER}"=> $player->getDisplayName()])));
                         }
                     }else {
                         EasyVanish::getInstance()->destroyInvisible($player);
                         $player->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-disabled-other1", ["{PLAYER}"=>$sender->getName()])));
                         $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-disabled-other2", ["{PLAYER}"=>$player->getDisplayName()])));
                         if (EasyVanish::getInstance()->getSetting("vanished-message")) {
-                            Server::getInstance()->broadcastMessage(EasyVanish::getInstance()->getSetting("join-message"));
+                            Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("join-message"), ["{PLAYER}"=> $player->getDisplayName()])));
                         }
                     }
                 }else{
