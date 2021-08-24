@@ -94,6 +94,7 @@ class VanishCommand extends Command {
                     }
                     break;
             }
+            return;
         }
         if(count($args) < 1 || empty($args)) {
             if ($sender->hasPermission("easyvanish.cmd.vanish")) {
