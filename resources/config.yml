@@ -20,8 +20,6 @@ message:
     vanish-disabled: "&cVanish mode disabled"
     vanish-disabled-other1: "&cVanish mode disabled by {PLAYER}"
     vanish-disabled-other2: "&cVanish mode disabled to {PLAYER}"
-
-    popup-message: "You are currently &cVANISHED"
   ind:
     vanish-enabled: "&aVanish mode diaktifkan"
     vanish-enabled-other1: "&aVanish mode diaktifkan oleh {PLAYER}"
@@ -29,5 +27,3 @@ message:
     vanish-disabled: "&cVanish mode dimatikan"
     vanish-disabled-other1: "&cVanish mode dimatikan oleh {PLAYER}"
     vanish-disabled-other2: "&cVanish mode dimatikan ke {PLAYER}"
-
-    popup-message: "Kamu sedang &cVANISHED"

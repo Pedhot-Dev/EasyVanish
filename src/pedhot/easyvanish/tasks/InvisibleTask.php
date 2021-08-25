@@ -32,6 +32,7 @@
 
 namespace pedhot\easyvanish\tasks;
 
+use pedhot\easyvanish\EasyVanish;
 use pocketmine\Player;
 use pocketmine\scheduler\Task;
 use pocketmine\Server;
@@ -47,8 +48,12 @@ class InvisibleTask extends Task {
     }
 
     public function onRun(int $currentTick) {
-        $this->player->sendPopup("You are currently " . TextFormat::RED . "VANISHED");
+        $this->player->sendPopup("You are currently" . TextFormat::RED . " VANISHED");
         foreach (Server::getInstance()->getOnlinePlayers() as $onlinePlayer) {
+            if ($onlinePlayer->hasPermission("easyvanish.see.player")) {
+                $onlinePlayer->showPlayer($this->player);
+                return;
+            }
             $onlinePlayer->hidePlayer($this->player);
         }
     }

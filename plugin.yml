@@ -12,6 +12,9 @@ permissions:
         default: op
         description: "Allow to use all vanish command"
         children:
+          easyvanish.see.player:
+            default: op
+            description: "Allow to see vanishing player"
           easyvanish.cmd.vanish:
             default: op
             description: "Allow to use command /vanish"

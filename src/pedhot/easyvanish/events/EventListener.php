@@ -34,8 +34,11 @@ namespace pedhot\easyvanish\events;
 
 use pedhot\easyvanish\EasyVanish;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\QueryRegenerateEvent;
+use pocketmine\network\mcpe\protocol\PlayerListPacket;
+use pocketmine\network\mcpe\protocol\types\PlayerListEntry;
 use pocketmine\Server;
 
 class EventListener implements Listener {
@@ -44,16 +47,38 @@ class EventListener implements Listener {
         Server::getInstance()->getPluginManager()->registerEvents($this, EasyVanish::getInstance());
     }
 
+    public function onJoin(PlayerJoinEvent $event) {
+        $player = $event->getPlayer();
+        EasyVanish::getInstance()->playersOnline[] = $player;
+
+        foreach (Server::getInstance()->getOnlinePlayers() as $players) {
+            if (in_array($players, EasyVanish::getInstance()->getVanishedPlayers())) {
+                $entry = new PlayerListEntry();
+                $entry->uuid = $players->getUniqueId();
+                $pk = new PlayerListPacket();
+                $pk->entries[] = $entry;
+                $pk->type = PlayerListPacket::TYPE_REMOVE;
+                $player->sendDataPacket($pk);
+            }
+        }
+
+        if (isset(EasyVanish::getInstance()->playerVanishData[$player->getRawUniqueId()])) {
+            EasyVanish::getInstance()->startInvisible($player);
+        }
+    }
+
     public function onQuit(PlayerQuitEvent $event) {
         $player = $event->getPlayer();
+        unset(EasyVanish::getInstance()->playersOnline[array_search($player, EasyVanish::getInstance()->playersOnline)]);
         if (EasyVanish::getInstance()->isInvisible($player)) {
             EasyVanish::getInstance()->destroyInvisible($player);
         }
     }
 
     public function onQueryRegenerate(QueryRegenerateEvent $event) {
+        $event->setPlayerList(EasyVanish::getInstance()->playersOnline);
         foreach(Server::getInstance()->getOnlinePlayers() as $p) {
-            if (in_array($p->getXuid(), EasyVanish::getInstance()->getVanishedPlayers())) {
+            if (in_array($p, EasyVanish::getInstance()->getVanishedPlayers())) {
                 $event->setPlayerCount($event->getPlayerCount() - 1);
             }
         }

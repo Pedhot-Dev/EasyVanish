@@ -44,6 +44,7 @@ use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\TaskHandler;
 use pocketmine\Server;
+use pocketmine\utils\TextFormat;
 
 class EasyVanish extends PluginBase {
     use SingletonTrait;
@@ -52,7 +53,13 @@ class EasyVanish extends PluginBase {
     private $invisible;
 
     /** @var Player[] */
+    public $playerVanishData = [];
+
+    /** @var Player[] */
     private $players = [];
+
+    /** @var Player[] */
+    public $playersOnline = [];
 
     /** @var array */
     private $message = [];
@@ -89,12 +96,12 @@ class EasyVanish extends PluginBase {
     }
 
     /**
-     * @param string $xuidStr
+     * @param string $rawId
      * @return Player|null
      */
-    public function getPlayerByXuid(string $xuidStr): ?Player {
-        foreach ($this->players as $xuid => $player) {
-            if ($xuidStr === $xuid) {
+    public function getPlayerByRawId(string $rawId): ?Player {
+        foreach ($this->players as $id => $player) {
+            if ($rawId === $id) {
                 return $player;
             }
         }
@@ -106,15 +113,19 @@ class EasyVanish extends PluginBase {
      * @return bool
      */
     public function isInvisible(Player $player): bool {
-        return isset($this->players[$player->getXuid()]);
+        return isset($this->players[$player->getRawUniqueId()]);
     }
 
     /**
      * @param Player $player
      */
     public function startInvisible(Player $player): void {
-        $this->players[$player->getXuid()] = $player;
-        $this->invisible[$player->getXuid()] = $this->getScheduler()->scheduleRepeatingTask(new InvisibleTask($player), 20);
+        $player->setDisplayName(TextFormat::GRAY . "[VP] " . TextFormat::RESET . $player->getDisplayName());
+        $player->setNameTag(TextFormat::GRAY . "[VP] " . TextFormat::RESET . $player->getNameTag());
+        $this->playerVanishData[$player->getRawUniqueId()] = $player;
+        $this->players[$player->getRawUniqueId()] = $player;
+        $this->invisible[$player->getRawUniqueId()] = $this->getScheduler()->scheduleRepeatingTask(new InvisibleTask($player), 20);
+        unset(EasyVanish::getInstance()->playersOnline[array_search($player, EasyVanish::getInstance()->playersOnline)]);
         foreach (Server::getInstance()->getOnlinePlayers() as $onlinePlayer) {
             $onlinePlayer->hidePlayer($player);
         }
@@ -125,9 +136,12 @@ class EasyVanish extends PluginBase {
      * @param Player $player
      */
     public function destroyInvisible(Player $player): void {
-        $this->getScheduler()->cancelTask($this->invisible[$player->getXuid()]->getTaskId());
-        unset($this->invisible[$player->getXuid()]);
-        unset($this->players[$player->getXuid()]);
+        $player->setNameTag(str_replace(TextFormat::GRAY . "[VP] ", null, $player->getNameTag()));
+        $player->setDisplayName(str_replace(TextFormat::GRAY . "[VP] ", null, $player->getDisplayName()));
+        $this->getScheduler()->cancelTask($this->invisible[$player->getRawUniqueId()]->getTaskId());
+        EasyVanish::getInstance()->playersOnline[] = $player;
+        unset($this->invisible[$player->getRawUniqueId()]);
+        unset($this->players[$player->getRawUniqueId()]);
         foreach (Server::getInstance()->getOnlinePlayers() as $onlinePlayer) {
             $onlinePlayer->showPlayer($player);
         }
@@ -173,27 +187,39 @@ class EasyVanish extends PluginBase {
     /**
      * @param Player $player
      */
-    private function addToList(Player $player) {
-        foreach (Server::getInstance()->getOnlinePlayers() as $p){
-            $pk = new PlayerListPacket();
-            $pk->type = PlayerListPacket::TYPE_ADD;
-            $pk->entries[] = PlayerListEntry::createAdditionEntry($player->getUniqueId(), $player->getId(), $player->getDisplayName(), SkinAdapterSingleton::get()->toSkinData($player->getSkin()), $player->getXuid());
-            $p->sendDataPacket($pk);
-        }
+    public function addToList(Player $player) {
+        Server::getInstance()->updatePlayerListData($player->getUniqueId(), $player->getId(), $player->getDisplayName(), $player->getSkin(), $player->getXuid());
+//        foreach (Server::getInstance()->getOnlinePlayers() as $p){
+//            $pk = new PlayerListPacket();
+//            $pk->type = PlayerListPacket::TYPE_ADD;
+//            $pk->entries[] = PlayerListEntry::createAdditionEntry($p->getUniqueId(), $p->getId(), $p->getDisplayName(), SkinAdapterSingleton::get()->toSkinData($p->getSkin()), $p->getXuid());
+//            $player->sendDataPacket($pk);
+//            $pk = new PlayerListPacket();
+//            $pk->type = PlayerListPacket::TYPE_ADD;
+//            $pk->entries[] = PlayerListEntry::createAdditionEntry($player->getUniqueId(), $player->getId(), $player->getDisplayName(), SkinAdapterSingleton::get()->toSkinData($player->getSkin()), $player->getXuid());
+//            $p->sendDataPacket($pk);
+//        }
     }
 
     /**
      * @param Player $player
      */
-    private function removeFromList(Player $player) {
-        foreach (Server::getInstance()->getOnlinePlayers() as $p){
-            $entry = new PlayerListEntry();
-            $entry->uuid = $player->getUniqueId();
-            $pk = new PlayerListPacket();
-            $pk->entries[] = $entry;
-            $pk->type = PlayerListPacket::TYPE_REMOVE;
-            $p->sendDataPacket($pk);
-        }
+    public function removeFromList(Player $player) {
+        Server::getInstance()->removePlayerListData($player->getUniqueId());
+//        foreach (Server::getInstance()->getOnlinePlayers() as $p){
+//            $entry = new PlayerListEntry();
+//            $entry->uuid = $p->getUniqueId();
+//            $pk = new PlayerListPacket();
+//            $pk->entries[] = $entry;
+//            $pk->type = PlayerListPacket::TYPE_REMOVE;
+//            $player->sendDataPacket($pk);
+//            $entry = new PlayerListEntry();
+//            $entry->uuid = $player->getUniqueId();
+//            $pk = new PlayerListPacket();
+//            $pk->entries[] = $entry;
+//            $pk->type = PlayerListPacket::TYPE_REMOVE;
+//            $p->sendDataPacket($pk);
+//        }
     }
 
     /**
