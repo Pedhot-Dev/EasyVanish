@@ -34,12 +34,17 @@ namespace pedhot\easyvanish\events;
 
 use pedhot\easyvanish\EasyVanish;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerCommandPreprocessEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\QueryRegenerateEvent;
+use pocketmine\lang\TranslationContainer;
 use pocketmine\network\mcpe\protocol\PlayerListPacket;
 use pocketmine\network\mcpe\protocol\types\PlayerListEntry;
+use pocketmine\Player;
+use pocketmine\scheduler\ClosureTask;
 use pocketmine\Server;
+use pocketmine\utils\TextFormat;
 
 class EventListener implements Listener {
 
@@ -62,8 +67,14 @@ class EventListener implements Listener {
             }
         }
 
-        if (isset(EasyVanish::getInstance()->playerVanishData[$player->getRawUniqueId()])) {
-            EasyVanish::getInstance()->startInvisible($player);
+        if (EasyVanish::getInstance()->getSetting("allow-vanish-when-quit")) {
+            if (isset(EasyVanish::getInstance()->playerVanishData[$player->getRawUniqueId()])) {
+                EasyVanish::getInstance()->startInvisible($player);
+                EasyVanish::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function (int $currentTick) use ($player): void {
+                    $player->setDisplayName(TextFormat::GRAY . "[V] " . TextFormat::RESET . $player->getDisplayName());
+                    $player->setNameTag(TextFormat::GRAY . "[V] " . TextFormat::RESET . $player->getNameTag());
+                }), 20);
+            }
         }
     }
 
@@ -81,6 +92,36 @@ class EventListener implements Listener {
             if (in_array($p, EasyVanish::getInstance()->getVanishedPlayers())) {
                 $event->setPlayerCount($event->getPlayerCount() - 1);
             }
+        }
+    }
+
+    public function onCommandExecute(PlayerCommandPreprocessEvent $event){
+        $player = $event->getPlayer();
+        $msg = $event->getMessage();
+        switch (false) {
+            case EasyVanish::getInstance()->getSetting("can-send-msg"):
+                $message = explode(" ", $msg);
+                if (in_array(array_shift($message), array("/tell", "/msg", "/w"))){
+                    $receiver = Server::getInstance()->getPlayer(array_shift($message));
+                    if ($receiver and  in_array($receiver, EasyVanish::getInstance()->getVanishedPlayers()) and !$player->hasPermission("easyvanish.see.player") and $player !== $receiver){
+                        $event->setCancelled();
+                        $player->sendMessage(TextFormat::RED . "That player cannot be found");
+                    }
+                }
+                break;
+            case EasyVanish::getInstance()->getSetting("can-teleport"):
+                $message = explode(" ", $msg);
+                if (in_array(array_shift($message), array("/tp", "/teleport"))){
+                    $receiver = Server::getInstance()->getPlayer(array_shift($message));
+                    if ($receiver and  in_array($receiver, EasyVanish::getInstance()->getVanishedPlayers()) and !$player->hasPermission("easyvanish.see.player") and $player !== $receiver){
+                        $event->setCancelled();
+                        $player->sendMessage(TextFormat::RED . "That player cannot be found");
+                    }
+                }
+                break;
+            default:
+
+                break;
         }
     }
 

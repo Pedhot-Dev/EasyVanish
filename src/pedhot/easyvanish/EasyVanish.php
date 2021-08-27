@@ -37,9 +37,6 @@ use pedhot\easyvanish\commands\VanishCommand;
 use pedhot\easyvanish\events\EventListener;
 use pedhot\easyvanish\singleton\SingletonTrait;
 use pedhot\easyvanish\tasks\InvisibleTask;
-use pocketmine\network\mcpe\protocol\PlayerListPacket;
-use pocketmine\network\mcpe\protocol\types\PlayerListEntry;
-use pocketmine\network\mcpe\protocol\types\SkinAdapterSingleton;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\TaskHandler;
@@ -85,11 +82,11 @@ class EasyVanish extends PluginBase {
         $this->setLang(in_array($this->getConfig()->get("default-lang"), ["eng", "ind"]) ? $this->getConfig()->get("default-lang") : "eng");
         in_array($this->getConfig()->get("default-lang"), ["eng", "ind"]) ? $this->getConfig()->set("default-lang", $this->getConfig()->get("default-lang")) : $this->getConfig()->set("default-lang", "eng");
         $this->getConfig()->save();
-        in_array($this->getConfig()->get("default-lang"), ["eng", "ind"]) ? $this->getLogger()->info("Lang set to " . $this->getConfig()->get("default-lang")) : $this->getLogger()->critical("Lang " . $this->getConfig()->get("default-lang") . " not found!. set default lang to eng");
+        in_array($this->getConfig()->get("default-lang"), ["eng", "ind"]) ? $this->getLogger()->debug("Lang set to " . $this->getConfig()->get("default-lang")) : $this->getLogger()->debug("Lang " . $this->getConfig()->get("default-lang") . " not found!. set default lang to eng");
         $this->setupMessage();
 
         $this->getLogger()->debug("Registering commands");
-        Server::getInstance()->getCommandMap()->register("_cmd", new VanishCommand("vanish"));
+        Server::getInstance()->getCommandMap()->register("EasyVanish", new VanishCommand("vanish"));
 
         $this->getLogger()->debug("Registering listeners");
         new EventListener();
@@ -120,8 +117,6 @@ class EasyVanish extends PluginBase {
      * @param Player $player
      */
     public function startInvisible(Player $player): void {
-        $player->setDisplayName(TextFormat::GRAY . "[VP] " . TextFormat::RESET . $player->getDisplayName());
-        $player->setNameTag(TextFormat::GRAY . "[VP] " . TextFormat::RESET . $player->getNameTag());
         $this->playerVanishData[$player->getRawUniqueId()] = $player;
         $this->players[$player->getRawUniqueId()] = $player;
         $this->invisible[$player->getRawUniqueId()] = $this->getScheduler()->scheduleRepeatingTask(new InvisibleTask($player), 20);
@@ -136,8 +131,8 @@ class EasyVanish extends PluginBase {
      * @param Player $player
      */
     public function destroyInvisible(Player $player): void {
-        $player->setNameTag(str_replace(TextFormat::GRAY . "[VP] ", null, $player->getNameTag()));
-        $player->setDisplayName(str_replace(TextFormat::GRAY . "[VP] ", null, $player->getDisplayName()));
+        $player->setNameTag(str_replace(TextFormat::GRAY . "[V] ", null, $player->getNameTag()));
+        $player->setDisplayName(str_replace(TextFormat::GRAY . "[V] ", null, $player->getDisplayName()));
         $this->getScheduler()->cancelTask($this->invisible[$player->getRawUniqueId()]->getTaskId());
         EasyVanish::getInstance()->playersOnline[] = $player;
         unset($this->invisible[$player->getRawUniqueId()]);
@@ -163,6 +158,9 @@ class EasyVanish extends PluginBase {
      */
     public function getMessage(string $name, array $params = [], ?string $lang = null): string {
         $lang = $lang ?? $this->getLang();
+        if (empty($params)) {
+            return $this->message[$lang][$name];
+        }
         return Utils::replaceVars($this->message[$lang][$name], $params);
     }
 
@@ -189,16 +187,6 @@ class EasyVanish extends PluginBase {
      */
     public function addToList(Player $player) {
         Server::getInstance()->updatePlayerListData($player->getUniqueId(), $player->getId(), $player->getDisplayName(), $player->getSkin(), $player->getXuid());
-//        foreach (Server::getInstance()->getOnlinePlayers() as $p){
-//            $pk = new PlayerListPacket();
-//            $pk->type = PlayerListPacket::TYPE_ADD;
-//            $pk->entries[] = PlayerListEntry::createAdditionEntry($p->getUniqueId(), $p->getId(), $p->getDisplayName(), SkinAdapterSingleton::get()->toSkinData($p->getSkin()), $p->getXuid());
-//            $player->sendDataPacket($pk);
-//            $pk = new PlayerListPacket();
-//            $pk->type = PlayerListPacket::TYPE_ADD;
-//            $pk->entries[] = PlayerListEntry::createAdditionEntry($player->getUniqueId(), $player->getId(), $player->getDisplayName(), SkinAdapterSingleton::get()->toSkinData($player->getSkin()), $player->getXuid());
-//            $p->sendDataPacket($pk);
-//        }
     }
 
     /**
@@ -206,20 +194,6 @@ class EasyVanish extends PluginBase {
      */
     public function removeFromList(Player $player) {
         Server::getInstance()->removePlayerListData($player->getUniqueId());
-//        foreach (Server::getInstance()->getOnlinePlayers() as $p){
-//            $entry = new PlayerListEntry();
-//            $entry->uuid = $p->getUniqueId();
-//            $pk = new PlayerListPacket();
-//            $pk->entries[] = $entry;
-//            $pk->type = PlayerListPacket::TYPE_REMOVE;
-//            $player->sendDataPacket($pk);
-//            $entry = new PlayerListEntry();
-//            $entry->uuid = $player->getUniqueId();
-//            $pk = new PlayerListPacket();
-//            $pk->entries[] = $entry;
-//            $pk->type = PlayerListPacket::TYPE_REMOVE;
-//            $p->sendDataPacket($pk);
-//        }
     }
 
     /**

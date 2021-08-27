@@ -11,19 +11,36 @@ settings:
   join-message: "&a[+] &7{PLAYER} &ajoined"
   quit-message: "&c[+] &7{PLAYER} &cquit"
 
+  can-send-msg: false
+  can-teleport: false
+
+  allow-vanish-when-quit: true
+
 # YOU CAN CUSTOM THIS!
 message:
   eng:
+    no-perm: "You do not have permission to use %a command"
+    player-not-found: "&cThat player cannot be found"
+
     vanish-enabled: "&aVanish mode enabled"
     vanish-enabled-other1: "&aVanish mode enabled by {PLAYER}"
     vanish-enabled-other2: "&aVanish mode enabled to {PLAYER}"
     vanish-disabled: "&cVanish mode disabled"
     vanish-disabled-other1: "&cVanish mode disabled by {PLAYER}"
     vanish-disabled-other2: "&cVanish mode disabled to {PLAYER}"
+    vanish-list: "&aThere are &e{COUNT_VANISHED} &aplayers vanished:"
+    no-player-vanish: "&cNo player is vanishing"
+    vanish-popup: "You are currently &cVANISHED"
   ind:
+    no-perm: "&cKamu tidak punya izin untuk menggunakan %a command"
+    player-not-found: "&cPlayer itu tidak dapat ditemukan"
+
     vanish-enabled: "&aVanish mode diaktifkan"
     vanish-enabled-other1: "&aVanish mode diaktifkan oleh {PLAYER}"
     vanish-enabled-other2: "&aVanish mode diaktifkan ke {PLAYER}"
     vanish-disabled: "&cVanish mode dimatikan"
     vanish-disabled-other1: "&cVanish mode dimatikan oleh {PLAYER}"
     vanish-disabled-other2: "&cVanish mode dimatikan ke {PLAYER}"
+    vanish-list: "&aSekarang ada &e{COUNT_VANISHED} &apemain sedang vanish:"
+    no-player-vanish: "&cTidak ada pemain yang sedang vanish"
+    vanish-popup: "Kamu sedang &cVANISHED"

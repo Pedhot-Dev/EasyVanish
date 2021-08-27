@@ -2,6 +2,7 @@ name: EasyVanish
 api: 3.0.0
 version: 1.0
 main: pedhot\easyvanish\EasyVanish
+mcpe-protocol: [448]
 
 permissions:
   easyvanish:

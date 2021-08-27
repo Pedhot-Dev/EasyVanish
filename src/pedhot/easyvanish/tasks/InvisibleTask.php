@@ -48,7 +48,7 @@ class InvisibleTask extends Task {
     }
 
     public function onRun(int $currentTick) {
-        $this->player->sendPopup("You are currently" . TextFormat::RED . " VANISHED");
+        $this->player->sendPopup(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-popup")));
         foreach (Server::getInstance()->getOnlinePlayers() as $onlinePlayer) {
             if ($onlinePlayer->hasPermission("easyvanish.see.player")) {
                 $onlinePlayer->showPlayer($this->player);

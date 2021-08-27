@@ -36,12 +36,13 @@ use pedhot\easyvanish\EasyVanish;
 use pedhot\easyvanish\Utils;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
+use pocketmine\command\PluginIdentifiableCommand;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
-class VanishCommand extends Command {
+class VanishCommand extends Command implements PluginIdentifiableCommand {
 
     public function __construct(string $name) {
         parent::__construct($name, "Vanish command", "/vanish help");
@@ -63,24 +64,21 @@ class VanishCommand extends Command {
                     $sender->sendMessage($title);
                     break;
                 case "list":
-                    $title = TextFormat::BOLD . TextFormat::GREEN . "List vanished on this server: \n";
-                    $i = 1;
-                    if (empty(EasyVanish::getInstance()->getVanishedPlayers())) {
-                        $title .= TextFormat::RED . "No player is vanishing";
-                    }else {
-                        foreach (EasyVanish::getInstance()->getVanishedPlayers() as $player) {
-                            $title .= TextFormat::RED . $i . "). " . TextFormat::YELLOW . $player->getName() . "\n";
-                            $i++;
-                        }
-                    }
-                    $sender->sendMessage($title);
+                    $playerNames = array_map(function (Player $player): string {
+                        return TextFormat::YELLOW . $player->getName();
+                    }, array_filter(EasyVanish::getInstance()->getVanishedPlayers(), function (Player $player): bool {
+                        return $player->isOnline();
+                    }));
+                    sort($playerNames, SORT_STRING);
+                    $sender->sendMessage(TextFormat::colorize($this->getMessage("vanish-list", ["{COUNT_VANISHED}"=>count($playerNames)])));
+                    $sender->sendMessage(count($playerNames) >= 1 ? implode(TextFormat::RED . ", ", $playerNames) : TextFormat::colorize($this->getMessage("no-player-vanish")));
                     break;
                 default:
                     $player = Server::getInstance()->getPlayer($args[0]);
                     if ($player instanceof Player) {
                         $this->vanish($sender, $player);
                     }else{
-                        $sender->sendMessage(TextFormat::RED . "That player cannot be found");
+                        $sender->sendMessage(TextFormat::colorize($this->getMessage("player-not-found")));
                     }
                     break;
             }
@@ -90,14 +88,14 @@ class VanishCommand extends Command {
             if ($sender->hasPermission("easyvanish.cmd.vanish")) {
                 $this->vanish($sender, $sender);
             }else {
-                $sender->sendMessage(TextFormat::RED . "You do not have permission to use vanish command");
+                $sender->sendMessage(TextFormat::colorize($this->getMessage("no-perm", ["%a"=>"vanish"])));
             }
             return;
         }
         switch (strtolower($args[0])) {
             case "help":
                 if (!$sender->hasPermission("easyvanish.cmd.vanish.help")) {
-                    $sender->sendMessage(TextFormat::RED . "You do not have permission to use vanish help command");
+                    $sender->sendMessage(TextFormat::colorize($this->getMessage("no-perm", ["%a"=>"vanish help"])));
                     return;
                 }
                 $helps = ["help"=> "Displays list of vanish commands", "list"=> "Displays list of vanished players", "<player: target>"=> "Vanish other player"];
@@ -109,39 +107,42 @@ class VanishCommand extends Command {
                 break;
             case "list":
                 if ($sender->hasPermission("easyvanish.cmd.vanish.list")) {
-                    $title = TextFormat::BOLD . TextFormat::GREEN . "List vanished on this server: \n";
-                    $i = 1;
-                    if (empty(EasyVanish::getInstance()->getVanishedPlayers())) {
-                        $title .= TextFormat::RED . "No player is vanishing";
-                    }else {
-                        foreach (EasyVanish::getInstance()->getVanishedPlayers() as $player) {
-                            $title .= TextFormat::RED . $i . "). " . TextFormat::YELLOW . $player->getName() . "\n";
-                            $i++;
-                        }
-                    }
-                    $sender->sendMessage($title);
+                    $playerNames = array_map(function (Player $player): string {
+                        return TextFormat::YELLOW . $player->getName();
+                    }, array_filter(EasyVanish::getInstance()->getVanishedPlayers(), function (Player $player): bool {
+                        return $player->isOnline();
+                    }));
+                    sort($playerNames, SORT_STRING);
+                    $sender->sendMessage(TextFormat::colorize($this->getMessage("vanish-list", ["{COUNT_VANISHED}"=>count($playerNames)])));
+                    $sender->sendMessage(implode(TextFormat::RED . ", ", $playerNames));
                 }else {
-                    $sender->sendMessage(TextFormat::RED . "You do not have permission to use vanish list command");
+                    $sender->sendMessage(TextFormat::colorize($this->getMessage("no-perm", ["%a"=>"vanish list"])));
                 }
                 break;
             default:
                 if (!$sender->hasPermission("easyvanish.cmd.vanish.other")) {
-                    $sender->sendMessage(TextFormat::RED . "You do not have permission to use vanish other command");
+                    $sender->sendMessage(TextFormat::colorize($this->getMessage("no-perm", ["%a"=>"vanish other"])));
                     return;
                 }
                 $player = Server::getInstance()->getPlayer($args[0]);
                 if ($player instanceof Player) {
                     $this->vanish($sender, $player);
                 }else{
-                    $sender->sendMessage(TextFormat::RED . "That player cannot be found");
+                    $sender->sendMessage(TextFormat::colorize($this->getMessage("player-not-found")));
                 }
                 break;
         }
     }
 
+    /**
+     * @param CommandSender $sender
+     * @param Player $player
+     */
     private function vanish(CommandSender $sender, Player $player) {
         if (!EasyVanish::getInstance()->isInvisible($player)) {
             EasyVanish::getInstance()->startInvisible($player);
+            $player->setDisplayName(TextFormat::GRAY . "[V] " . TextFormat::RESET . $player->getDisplayName());
+            $player->setNameTag(TextFormat::GRAY . "[V] " . TextFormat::RESET . $player->getNameTag());
             $player->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled-other1", ["{PLAYER}"=>$sender->getName()])));
             $sender->sendMessage(TextFormat::colorize(EasyVanish::getInstance()->getMessage("vanish-enabled-other2", ["{PLAYER}"=>$player->getName()])));
             if (EasyVanish::getInstance()->getSetting("vanished-message")) {
@@ -155,6 +156,20 @@ class VanishCommand extends Command {
                 Server::getInstance()->broadcastMessage(TextFormat::colorize(Utils::replaceVars(EasyVanish::getInstance()->getSetting("join-message"), ["{PLAYER}"=> $player->getName()])));
             }
         }
+    }
+
+    public function getPlugin(): EasyVanish {
+        return EasyVanish::getInstance();
+    }
+
+    /**
+     * @param string $name
+     * @param array $params
+     * @param string|null $lang
+     * @return string
+     */
+    private function getMessage(string $name, array $params = [], ?string $lang = null): string {
+        return EasyVanish::getInstance()->getMessage($name, $params, $lang);
     }
 
 }
